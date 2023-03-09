@@ -1,34 +1,27 @@
 ﻿﻿using UnityEngine;
 
-public class SelectionManager : MonoBehaviour
-{
-    [SerializeField] private string selectableTag = "Selectable";
+ public class SelectionManager : MonoBehaviour
+ {
+     private IRayProvider _rayProvider;
+     private ISelector _selector;
+     private ISelectionResponse _selectionResponse;
 
-    private ISelectionResponse _selectionResponse;
+     private Transform _currentSelection;
 
-    private Transform _selection;
-    
-    private void Awake()
-    {
-        _selectionResponse = GetComponent<ISelectionResponse>();
-    }
+     private void Awake()
+     {
+         _rayProvider = GetComponent<IRayProvider>();
+         _selector = GetComponent<ISelector>();
+         _selectionResponse = GetComponent<ISelectionResponse>();
+     }
 
-    private void Update()
-    {
-        if (_selection != null) _selectionResponse.OnDeselect(_selection);
+     private void Update()
+     {
+         if (_currentSelection != null) _selectionResponse.OnDeselect(_currentSelection);
 
-        var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        
-        _selection = null;
-        if (Physics.Raycast(ray, out var hit))
-        {
-            var selection = hit.transform;
-            if (selection.CompareTag(selectableTag))
-            {
-                _selection = selection;
-            }
-        }
+         _selector.Check(_rayProvider.CreateRay());
+         _currentSelection = _selector.GetSelection();
 
-        if (_selection != null) _selectionResponse.OnSelect(_selection);
-    }
-}
+         if (_currentSelection != null) _selectionResponse.OnSelect(_currentSelection);
+     }
+ }
